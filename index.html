@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trainer Addition und Subtraktion mit ganzen Zahlen</title>
+<style>
+  :root{
+    --bg:#f4f7fb;
+    --card:#ffffff;
+    --ink:#1f2937;
+    --muted:#667085;
+    --border:#dbe3ec;
+    --primary:#2f67b2;
+    --primary-dark:#234f8c;
+    --soft:#eef4fb;
+    --good-bg:#e9f8ee;
+    --good:#237a3b;
+    --bad-bg:#fff0f0;
+    --bad:#a13737;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+  }
+
+  .wrap{
+    max-width:900px;
+    margin:0 auto;
+    padding:24px;
+  }
+
+  h1{
+    margin:0 0 8px;
+    font-size:clamp(1.7rem,3vw,2.35rem);
+  }
+
+  .intro{
+    margin:0 0 20px;
+    color:var(--muted);
+    line-height:1.45;
+  }
+
+  .mode-card,
+  .trainer-card,
+  .stat{
+    background:var(--card);
+    border:1px solid var(--border);
+    box-shadow:0 8px 24px rgba(31,41,55,.07);
+  }
+
+  .mode-card{
+    border-radius:18px;
+    padding:18px;
+    margin-bottom:18px;
+  }
+
+  .mode-title{
+    margin:0 0 12px;
+    font-weight:800;
+    font-size:1.05rem;
+  }
+
+  .mode-buttons{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+  }
+
+  .mode-btn{
+    min-height:58px;
+    border:2px solid #c8d3e0;
+    border-radius:14px;
+    background:#fff;
+    color:#24364d;
+    font:inherit;
+    font-weight:800;
+    cursor:pointer;
+    padding:10px 14px;
+    touch-action:manipulation;
+  }
+
+  .mixed-wide{grid-column:1 / -1}
+
+  .mode-btn.active{
+    background:#eaf2ff;
+    border-color:var(--primary);
+    color:var(--primary-dark);
+  }
+
+  .mode-info{
+    margin:12px 0 0;
+    color:var(--muted);
+    font-size:.93rem;
+    line-height:1.4;
+  }
+
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-bottom:18px;
+  }
+
+  .stat{
+    border-radius:16px;
+    padding:14px;
+    text-align:center;
+  }
+
+  .stat .label{
+    display:block;
+    color:var(--muted);
+    font-size:.92rem;
+  }
+
+  .stat .value{
+    display:block;
+    margin-top:2px;
+    font-size:1.65rem;
+    font-weight:850;
+  }
+
+  .trainer-card{
+    border-radius:20px;
+    padding:26px;
+  }
+
+  .task-label{
+    color:var(--muted);
+    font-weight:750;
+    margin-bottom:8px;
+  }
+
+  .task{
+    min-height:120px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    background:var(--soft);
+    border-radius:16px;
+    padding:24px 12px;
+    margin-bottom:20px;
+    font-size:clamp(2.3rem,7vw,4.4rem);
+    line-height:1;
+    font-weight:850;
+  }
+
+  .answer-row{
+    display:flex;
+    gap:10px;
+    align-items:stretch;
+  }
+
+  .answer{
+    flex:1;
+    min-width:0;
+    border:2px solid #b9c6d6;
+    border-radius:14px;
+    background:#fff;
+    color:var(--ink);
+    padding:14px 16px;
+    font:inherit;
+    font-size:1.45rem;
+    font-weight:750;
+    text-align:center;
+    outline:none;
+  }
+
+  .answer.answer-correct{
+    background:var(--good-bg);
+    border-color:#38a169;
+    color:var(--good);
+  }
+
+  .answer.answer-wrong{
+    background:var(--bad-bg);
+    border-color:#e05252;
+    color:var(--bad);
+  }
+
+  button{
+    appearance:none;
+    border:0;
+    border-radius:14px;
+    font:inherit;
+    font-weight:800;
+    cursor:pointer;
+  }
+
+  .check{
+    min-width:120px;
+    background:var(--primary);
+    color:white;
+    padding:12px 18px;
+  }
+
+  .check:active,
+  .mode-btn:active,
+  .key:active{
+    transform:scale(.98);
+  }
+
+  .keypad{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    max-width:440px;
+    margin:16px auto 0;
+  }
+
+  .key{
+    min-height:64px;
+    padding:8px;
+    border:1px solid #cbd5e1;
+    background:#f7f9fc;
+    color:#1f2937;
+    font-size:1.55rem;
+    touch-action:manipulation;
+  }
+
+  .key.zero{grid-column:span 2}
+  .key.sign{background:#eef4fb;color:#234f8c}
+  .key.clear{background:#fff0f0;color:#a13737}
+  .key.back{background:#eef1f5}
+
+  .feedback{
+    min-height:52px;
+    margin-top:15px;
+    padding:12px 14px;
+    border-radius:14px;
+    font-weight:800;
+    visibility:hidden;
+    text-align:center;
+  }
+
+  .feedback.good{
+    visibility:visible;
+    color:var(--good);
+    background:var(--good-bg);
+  }
+
+  .feedback.bad{
+    visibility:visible;
+    color:var(--bad);
+    background:var(--bad-bg);
+  }
+
+  .note{
+    margin-top:16px;
+    color:var(--muted);
+    font-size:.92rem;
+    line-height:1.4;
+    text-align:center;
+  }
+
+  @media (max-width:650px){
+    .wrap{padding:14px}
+    .mode-buttons{grid-template-columns:1fr}
+    .stats{grid-template-columns:1fr}
+    .trainer-card{padding:18px}
+    .answer-row{flex-direction:column}
+    .check{min-height:52px;width:100%}
+  }
+
+  .level-buttons{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:650px){.level-buttons{grid-template-columns:1fr}}
+
+  .results-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    box-shadow:0 8px 24px rgba(31,41,55,.07);
+    border-radius:18px;
+    padding:10px;
+    margin-bottom:18px;
+    overflow-x:auto;
+  }
+  .results-table{
+    width:100%;
+    border-collapse:collapse;
+    text-align:center;
+  }
+  .results-table th,.results-table td{
+    padding:12px 10px;
+    border-bottom:1px solid var(--border);
+  }
+  .results-table thead th{
+    background:var(--soft);
+    font-weight:850;
+  }
+  .results-table tbody th{
+    text-align:left;
+    font-weight:800;
+  }
+  .results-table tbody tr:last-child th,
+  .results-table tbody tr:last-child td{border-bottom:0}
+  .results-table td{font-size:1.15rem;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Trainer Addition und Subtraktion mit ganzen Zahlen</h1>
+  <p class="intro">Wähle zuerst deine Stufe und danach Addition, Subtraktion oder gemischt.</p>
+
+  <section class="mode-card" aria-label="Stufe auswählen">
+    <p class="mode-title">Stufe</p>
+    <div class="mode-buttons level-buttons">
+      <button type="button" class="mode-btn active" id="startLevel">Start</button>
+      <button type="button" class="mode-btn" id="supportLevel">Lernförderschüler</button>
+      <button type="button" class="mode-btn" id="regularLevel">Regelschüler</button>
+      <button type="button" class="mode-btn" id="proLevel">Profi</button>
+    </div>
+  </section>
+
+  <section class="mode-card" aria-label="Rechenart auswählen">
+    <p class="mode-title">Rechenart</p>
+    <div class="mode-buttons">
+      <button type="button" class="mode-btn active" id="additionMode">Addition</button>
+      <button type="button" class="mode-btn" id="subtractionMode">Subtraktion</button>
+      <button type="button" class="mode-btn mixed-wide" id="mixedMode">Gemischt</button>
+    </div>
+  </section>
+
+  <section class="results-card" aria-label="Auswertung">
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>Stufe</th>
+          <th>Richtig</th>
+          <th>Gelöst</th>
+          <th>Richtig in %</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Start</th>
+          <td id="startCorrect">0</td>
+          <td id="startTotal">0</td>
+          <td id="startPercent">0 %</td>
+        </tr>
+        <tr>
+          <th>Lernförderschüler</th>
+          <td id="supportCorrect">0</td>
+          <td id="supportTotal">0</td>
+          <td id="supportPercent">0 %</td>
+        </tr>
+        <tr>
+          <th>Regelschüler</th>
+          <td id="regularCorrect">0</td>
+          <td id="regularTotal">0</td>
+          <td id="regularPercent">0 %</td>
+        </tr>
+        <tr>
+          <th>Profi</th>
+          <td id="proCorrect">0</td>
+          <td id="proTotal">0</td>
+          <td id="proPercent">0 %</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <main class="trainer-card">
+    <div class="task-label">Aufgabe</div>
+    <div class="task" id="task" aria-live="polite">–</div>
+
+    <div id="rewriteArea" style="margin-bottom:14px">
+      <div class="answer-row">
+        <input id="rewrite" class="answer" type="text" inputmode="none" readonly placeholder="umgeschriebene Aufgabe" aria-label="umgeschriebene Aufgabe">
+        <button type="button" class="check" id="rewriteCheckBtn">Prüfen</button>
+      </div>
+    </div>
+
+    <div class="answer-row" id="answerArea">
+      <input
+        id="answer"
+        class="answer"
+        type="text"
+        inputmode="none"
+        readonly
+        placeholder="Ergebnis"
+        aria-label="Ergebnis"
+      >
+      <button type="button" class="check" id="checkBtn">Prüfen</button>
+    </div>
+
+    <div class="keypad" aria-label="Bildschirmtastatur">
+      <button type="button" class="key" data-key="7">7</button>
+      <button type="button" class="key" data-key="8">8</button>
+      <button type="button" class="key" data-key="9">9</button>
+
+      <button type="button" class="key" data-key="4">4</button>
+      <button type="button" class="key" data-key="5">5</button>
+      <button type="button" class="key" data-key="6">6</button>
+
+      <button type="button" class="key" data-key="1">1</button>
+      <button type="button" class="key" data-key="2">2</button>
+      <button type="button" class="key" data-key="3">3</button>
+
+      <button type="button" class="key zero" data-key="0">0</button>
+      <button type="button" class="key sign" data-key="plus">+</button>
+      <button type="button" class="key sign" data-key="minus">−</button>
+
+      <button type="button" class="key clear" data-key="clear">C</button>
+      <button type="button" class="key back" data-key="back">⌫</button>
+    </div>
+
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+
+    <div class="note">
+      Richtig: Das Eingabefeld wird grün und nach einer Sekunde erscheint automatisch die nächste Aufgabe.
+      Falsch: Das Feld wird rot und dieselbe Aufgabe bleibt stehen.
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  const additionModeBtn = document.getElementById('additionMode');
+  const subtractionModeBtn = document.getElementById('subtractionMode');
+  const mixedModeBtn = document.getElementById('mixedMode');
+  const startLevelBtn = document.getElementById('startLevel');
+  const supportLevelBtn = document.getElementById('supportLevel');
+  const regularLevelBtn = document.getElementById('regularLevel');
+  const proLevelBtn = document.getElementById('proLevel');
+
+  const taskEl = document.getElementById('task');
+  const answerEl = document.getElementById('answer');
+  const rewriteEl = document.getElementById('rewrite');
+  const rewriteArea = document.getElementById('rewriteArea');
+  const rewriteCheckBtn = document.getElementById('rewriteCheckBtn');
+  const answerArea = document.getElementById('answerArea');
+  const feedbackEl = document.getElementById('feedback');
+  const statEls = {
+    start: {
+      correct: document.getElementById('startCorrect'),
+      total: document.getElementById('startTotal'),
+      percent: document.getElementById('startPercent')
+    },
+    support: {
+      correct: document.getElementById('supportCorrect'),
+      total: document.getElementById('supportTotal'),
+      percent: document.getElementById('supportPercent')
+    },
+    regular: {
+      correct: document.getElementById('regularCorrect'),
+      total: document.getElementById('regularTotal'),
+      percent: document.getElementById('regularPercent')
+    },
+    pro: {
+      correct: document.getElementById('proCorrect'),
+      total: document.getElementById('proTotal'),
+      percent: document.getElementById('proPercent')
+    }
+  };
+  const checkBtn = document.getElementById('checkBtn');
+
+  let operation = 'addition';
+  let level = 'start';
+  let currentAnswer = 0;
+  let currentRewrite = '';
+  let inputStage = 'rewrite';
+  const stats = {
+    start: {correct:0,total:0},
+    support: {correct:0,total:0},
+    regular: {correct:0,total:0},
+    pro: {correct:0,total:0}
+  };
+  let locked = false;
+
+  const rint = (min,max) => Math.floor(Math.random()*(max-min+1))+min;
+
+  function updateStats(){
+    ['start','support','regular','pro'].forEach(key => {
+      const s = stats[key];
+      statEls[key].correct.textContent = s.correct;
+      statEls[key].total.textContent = s.total;
+      const pct = s.total === 0 ? 0 : Math.round((s.correct/s.total)*100);
+      statEls[key].percent.textContent = pct + ' %';
+    });
+  }
+
+  function formatNumber(value){
+    return value < 0 ? `(${value})` : `${value}`;
+  }
+
+  function operandRange(){
+    if(level === 'start' || level === 'support') return 9;
+    if(level === 'regular') return 20;
+    return 100;
+  }
+
+  function resultRange(){
+    if(level === 'start' || level === 'support') return 18;
+    if(level === 'regular') return 20;
+    return 100;
+  }
+
+  function makeAdditionTask(){
+    const limit = operandRange();
+    let a, b, result;
+    do{
+      a = rint(-limit,limit);
+      b = level === 'start' ? rint(-limit,-1) : rint(-limit,limit);
+      result = a + b;
+    } while(result < -resultRange() || result > resultRange());
+    return { text: `${formatNumber(a)} + ${formatNumber(b)}`, answer: result, rewrite: `${a}${b < 0 ? '−' + Math.abs(b) : '+' + b}` };
+  }
+
+  function makeSubtractionTask(){
+    const limit = operandRange();
+    let a, b, result;
+    do{
+      a = rint(-limit,limit);
+      b = level === 'start' ? rint(-limit,-1) : rint(-limit,limit);
+      result = a - b;
+    } while(result < -resultRange() || result > resultRange());
+    return { text: `${formatNumber(a)} − ${formatNumber(b)}`, answer: result, rewrite: `${a}${b < 0 ? '+' + Math.abs(b) : '−' + b}` };
+  }
+
+  function makeTask(){
+    let t;
+    let taskOperation = operation;
+
+    if(operation === 'mixed'){
+      const operations = ['addition','subtraction'];
+      taskOperation = operations[rint(0, operations.length - 1)];
+    }
+
+    if(taskOperation === 'addition') t = makeAdditionTask();
+    if(taskOperation === 'subtraction') t = makeSubtractionTask();
+
+    currentAnswer = t.answer;
+    currentRewrite = t.rewrite;
+    taskEl.textContent = t.text;
+    rewriteArea.style.display = level === 'start' ? 'block' : 'none';
+    rewriteEl.value = '';
+    rewriteEl.classList.remove('answer-correct','answer-wrong');
+    inputStage = level === 'start' ? 'rewrite' : 'answer';
+    answerEl.value = '';
+    answerArea.style.display = level === 'start' ? 'none' : 'flex';
+    answerEl.disabled = false;
+    answerEl.classList.remove('answer-correct','answer-wrong');
+    feedbackEl.className = 'feedback';
+    feedbackEl.textContent = '';
+    locked = false;
+  }
+
+  function setOperation(newOperation){
+    operation = newOperation;
+
+    additionModeBtn.classList.toggle('active', operation === 'addition');
+    subtractionModeBtn.classList.toggle('active', operation === 'subtraction');
+    mixedModeBtn.classList.toggle('active', operation === 'mixed');
+
+    makeTask();
+  }
+
+  function setLevel(newLevel){
+    level = newLevel;
+    startLevelBtn.classList.toggle('active', level === 'start');
+    supportLevelBtn.classList.toggle('active', level === 'support');
+    regularLevelBtn.classList.toggle('active', level === 'regular');
+    proLevelBtn.classList.toggle('active', level === 'pro');
+
+    makeTask();
+  }
+
+  function normalizeExpr(v){ return v.replace(/\s/g,'').replace(/−/g,'-'); }
+
+  function checkAnswer(){
+    if(locked) return;
+
+    if(level === 'start' && inputStage === 'rewrite'){
+      const rawRewrite = rewriteEl.value.trim();
+      if(rawRewrite === ''){
+        rewriteEl.classList.add('answer-wrong');
+        feedbackEl.className = 'feedback bad';
+        feedbackEl.textContent = 'Bitte zuerst die umgeschriebene Aufgabe eingeben und prüfen.';
+        return;
+      }
+      if(normalizeExpr(rawRewrite) === normalizeExpr(currentRewrite)){
+        rewriteEl.classList.remove('answer-wrong');
+        rewriteEl.classList.add('answer-correct');
+        inputStage = 'answer';
+        answerArea.style.display = 'flex';
+        feedbackEl.className = 'feedback good';
+        feedbackEl.textContent = 'Richtig umgeschrieben! Jetzt das Ergebnis eingeben.';
+      } else {
+        rewriteEl.classList.add('answer-wrong');
+        feedbackEl.className = 'feedback bad';
+        feedbackEl.textContent = 'Noch nicht richtig umgeschrieben – prüfe die Vorzeichen.';
+      }
+      return;
+    }
+
+    const raw = answerEl.value.trim();
+    if(raw === ''){
+      answerEl.classList.add('answer-wrong');
+      feedbackEl.className = 'feedback bad';
+      feedbackEl.textContent = 'Bitte zuerst ein Ergebnis eingeben.';
+      return;
+    }
+    const userAnswer = Number(raw);
+    if(!Number.isInteger(userAnswer)){
+      answerEl.classList.add('answer-wrong');
+      feedbackEl.className = 'feedback bad';
+      feedbackEl.textContent = 'Bitte eine ganze Zahl eingeben.';
+      return;
+    }
+    stats[level].total++;
+    if(userAnswer === currentAnswer){
+      stats[level].correct++; locked = true;
+      answerEl.classList.remove('answer-wrong'); answerEl.classList.add('answer-correct');
+      feedbackEl.className = 'feedback good'; feedbackEl.textContent = 'Richtig!';
+      updateStats(); setTimeout(makeTask,1000);
+    } else {
+      answerEl.classList.remove('answer-correct'); answerEl.classList.add('answer-wrong');
+      feedbackEl.className = 'feedback bad'; feedbackEl.textContent = 'Noch nicht richtig – versuche es noch einmal.';
+      updateStats();
+    }
+  }
+
+  document.querySelectorAll('.keypad .key').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(locked) return;
+      const key = btn.dataset.key;
+      const target = (level === 'start' && inputStage === 'rewrite') ? rewriteEl : answerEl;
+      target.classList.remove('answer-wrong');
+      feedbackEl.className = 'feedback'; feedbackEl.textContent = '';
+
+      if(key === 'clear'){ target.value = ''; return; }
+      if(key === 'back'){ target.value = target.value.slice(0,-1); return; }
+
+      if(level === 'start' && inputStage === 'rewrite'){
+        if(key === 'plus') target.value += '+';
+        else if(key === 'minus') target.value += '−';
+        else target.value += key;
+        return;
+      }
+
+      if(key === 'minus'){
+        if(target.value.startsWith('-')) target.value = target.value.slice(1);
+        else if(target.value.startsWith('+')) target.value = '-' + target.value.slice(1);
+        else target.value = '-' + target.value;
+      } else if(key === 'plus'){
+        if(target.value.startsWith('-') || target.value.startsWith('+')) target.value = target.value.slice(1);
+      } else {
+        let v=target.value; if(v==='0') v=''; if(v==='-0') v='-';
+        if(v.replace(/^[+-]/,'').length < 4) target.value=v+key;
+      }
+    });
+  });
+
+  rewriteCheckBtn.addEventListener('click', checkAnswer);
+  checkBtn.addEventListener('click', checkAnswer);
+  additionModeBtn.addEventListener('click', () => setOperation('addition'));
+  subtractionModeBtn.addEventListener('click', () => setOperation('subtraction'));
+  mixedModeBtn.addEventListener('click', () => setOperation('mixed'));
+  startLevelBtn.addEventListener('click', () => setLevel('start'));
+  supportLevelBtn.addEventListener('click', () => setLevel('support'));
+  regularLevelBtn.addEventListener('click', () => setLevel('regular'));
+  proLevelBtn.addEventListener('click', () => setLevel('pro'));
+
+  updateStats();
+  makeTask();
+})();
+</script>
+</body>
+</html>
